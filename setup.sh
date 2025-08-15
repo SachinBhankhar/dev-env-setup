@@ -123,13 +123,14 @@ cd - >/dev/null
 rm -rf "$TMP_DIR"
 
 # -------------------------
-# 9. Hyprland + Waybar
+# 9. Hyprland + Waybar (only if Arch)
 # -------------------------
-echo "[*] Installing Hyprland + Waybar..."
-sudo pacman -S --noconfirm hyprland waybar rofi wl-clipboard
+if grep -qi "arch" /etc/os-release; then
+    echo "[*] Installing Hyprland + Waybar (Arch detected)..."
+    sudo pacman -S --noconfirm hyprland waybar rofi wl-clipboard
 
-mkdir -p "$HOME/.config/waybar"
-cat > "$HOME/.config/waybar/config.jsonc" <<'EOF'
+    mkdir -p "$HOME/.config/waybar"
+    cat > "$HOME/.config/waybar/config.jsonc" <<'EOF'
 {
   "layer": "top",
   "position": "top",
@@ -142,13 +143,16 @@ cat > "$HOME/.config/waybar/config.jsonc" <<'EOF'
 }
 EOF
 
-cat > "$HOME/.config/waybar/style.css" <<'EOF'
+    cat > "$HOME/.config/waybar/style.css" <<'EOF'
 * {
     border-radius: 8px;
     font-family: "JetBrainsMono Nerd Font", monospace;
     font-size: 12px;
 }
 EOF
+else
+    echo "[!] Non-Arch system detected — skipping Hyprland + Waybar setup."
+fi
 
 # -------------------------
 # 10. Chrome (AUR)
