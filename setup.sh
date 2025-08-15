@@ -23,33 +23,18 @@ sudo pacman -Syu --noconfirm || die "System update failed"
 log_success "System updated."
 
 # -------------------------
-# 2. Install yay (AUR helper) if missing
-# -------------------------
-if ! command -v yay >/dev/null 2>&1; then
-    log_info "Installing yay (AUR helper)..."
-    git clone https://aur.archlinux.org/yay.git /tmp/yay || die "Failed to clone yay repo"
-    pushd /tmp/yay >/dev/null || die "Cannot enter yay dir"
-    makepkg -si --noconfirm || die "yay build failed"
-    popd >/dev/null
-    rm -rf /tmp/yay
-    log_success "yay installed."
-else
-    log_success "yay is already installed."
-fi
-
-# -------------------------
-# 3. Dev essentials
+# 2. Dev essentials
 # -------------------------
 log_info "Installing dev essentials..."
 sudo pacman -S --needed --noconfirm base-devel git curl wget unzip fzf tmux zsh go || die "Essential tools install failed"
 log_success "Dev essentials installed."
 
 # -------------------------
-# 4. Android Studio + SDK (Arch only)
+# 3. Android Studio + SDK (Arch only)
 # -------------------------
 if grep -qi "arch" /etc/os-release; then
-    log_info "Installing Android Studio + SDK (AUR)..."
-    yay -S --needed --noconfirm android-studio android-sdk android-sdk-platform-tools android-sdk-build-tools || die "Android Studio or SDK install failed"
+    log_info "Installing Android Studio (from Arch community repo)..."
+    sudo pacman -S --needed --noconfirm android-studio android-sdk android-sdk-platform-tools android-sdk-build-tools || die "Android Studio or SDK install failed"
 
     # Install compatibility libraries for Android Studio
     log_info "Installing compatibility libraries for Android Studio..."
@@ -88,7 +73,7 @@ else
 fi
 
 # -------------------------
-# 5. Flutter install
+# 4. Flutter install
 # -------------------------
 log_info "Downloading Flutter..."
 curl -L "$FLUTTER_URL" -o "/tmp/$FILENAME" || die "Failed to download Flutter SDK."
@@ -107,7 +92,7 @@ yes | flutter doctor --android-licenses || log_error "Flutter license acceptance
 log_success "Flutter (SDK) setup complete."
 
 # -------------------------
-# 6. Zsh + Oh My Zsh + Powerlevel10k + Plugins
+# 5. Zsh + Oh My Zsh + Powerlevel10k + Plugins
 # -------------------------
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
     log_info "Installing Oh My Zsh..."
@@ -117,9 +102,11 @@ else
     log_success "Oh My Zsh already present."
 fi
 
-yay -S --needed --noconfirm zsh-theme-powerlevel10k zsh-autosuggestions zsh-syntax-highlighting || log_error "Some Zsh plugins/themes failed to install."
+# Powerlevel10k, autosuggestions, syntax-highlighting: use official repos if possible, otherwise guide user
+log_info "Installing Zsh plugins and theme (from Arch community when possible)..."
+sudo pacman -S --needed --noconfirm zsh-theme-powerlevel10k zsh-autosuggestions zsh-syntax-highlighting || \
+  log_error "Some Zsh plugins/themes failed to install. If missing, install from AUR or GitHub manually."
 
-# Append plugins to .zshrc if missing
 [ ! -f "$HOME/.zshrc" ] && touch "$HOME/.zshrc"
 grep -q 'zsh-autosuggestions' "$HOME/.zshrc" || echo 'source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh' >> "$HOME/.zshrc"
 grep -q 'zsh-syntax-highlighting' "$HOME/.zshrc" || echo 'source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh' >> "$HOME/.zshrc"
@@ -127,7 +114,7 @@ grep -q 'zsh-syntax-highlighting' "$HOME/.zshrc" || echo 'source /usr/share/zsh/
 log_success "Zsh plugins and theme configured."
 
 # -------------------------
-# 7. Neovim with your config
+# 6. Neovim with your config
 # -------------------------
 log_info "Installing Neovim..."
 sudo pacman -S --needed --noconfirm neovim || log_error "Neovim install failed."
@@ -139,7 +126,7 @@ else
 fi
 
 # -------------------------
-# 8. Tmux + tmux-sessionizer
+# 7. Tmux + tmux-sessionizer
 # -------------------------
 mkdir -p ~/.local/bin
 
@@ -178,7 +165,7 @@ grep -q 'tmux-sessionizer' ~/.tmux.conf || echo 'bind-key -r f run-shell "tmux n
 log_success "Tmux and sessionizer ready."
 
 # -------------------------
-# 9. Flutter Watcher Go build
+# 8. Flutter Watcher Go build
 # -------------------------
 if [ ! -d "$HOME/flutter-watcher" ]; then
     git clone https://github.com/SachinBhankhar/flutter-watcher.git "$HOME/flutter-watcher" || log_error "Flutter-watcher clone failed."
@@ -192,7 +179,7 @@ popd >/dev/null
 log_success "Flutter watcher built and installed."
 
 # -------------------------
-# 10. Hyprland + Waybar (Arch only)
+# 9. Hyprland + Waybar (Arch only)
 # -------------------------
 if grep -qi "arch" /etc/os-release; then
     log_info "Installing Hyprland + Waybar..."
